@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
@@ -179,6 +179,16 @@ const ProcessosView = () => {
     const toast = useRef<Toast>(null);
     const { user, logout, isAuthenticated, initializing } = useAuth();
     const router = useRouter();
+    const isAdmin = useMemo(() => (user?.role ?? '').toString().toLowerCase() === 'admin', [user?.role]);
+
+    const showPermissionDenied = (action: string) => {
+        toast.current?.show({
+            severity: 'warn',
+            summary: 'Acesso negado',
+            detail: `Seu perfil não permite ${action}.`,
+            life: 4000
+        });
+    };
 
     useEffect(() => {
         if (!initializing && isAuthenticated) {
@@ -209,6 +219,11 @@ const ProcessosView = () => {
     };
 
     const openNew = () => {
+        if (!isAdmin) {
+            showPermissionDenied('criar processos');
+            return;
+        }
+
         setFormValues(emptyProcesso);
         setEditingProcesso(null);
         setSubmitted(false);
@@ -256,6 +271,12 @@ const ProcessosView = () => {
             return;
         }
 
+        const isCreating = !editingProcesso;
+        if (isCreating && !isAdmin) {
+            showPermissionDenied('criar processos');
+            return;
+        }
+
         const payload = { ...formValues };
         let response;
         if (editingProcesso?.id) {
@@ -298,15 +319,30 @@ const ProcessosView = () => {
     };
 
     const confirmDeleteProcesso = (processo: Processo) => {
+        if (!isAdmin) {
+            showPermissionDenied('excluir processos');
+            return;
+        }
+
         setEditingProcesso(processo);
         setDeleteDialogVisible(true);
     };
 
     const confirmDeleteSelected = () => {
+        if (!isAdmin) {
+            showPermissionDenied('excluir processos');
+            return;
+        }
+
         setDeleteManyDialogVisible(true);
     };
 
     const removeProcesso = async () => {
+        if (!isAdmin) {
+            showPermissionDenied('excluir processos');
+            return;
+        }
+
         if (!editingProcesso) return;
 
         if (editingProcesso.id) {
@@ -320,6 +356,11 @@ const ProcessosView = () => {
     };
 
     const removeSelectedProcessos = async () => {
+        if (!isAdmin) {
+            showPermissionDenied('excluir processos');
+            return;
+        }
+
         await Promise.all(
             selectedProcessos
                 .filter((processo) => processo.id)
@@ -386,8 +427,8 @@ const ProcessosView = () => {
 
     const leftToolbarTemplate = () => (
         <>
-            <Button label="Novo" icon="pi pi-plus" severity="success" className="mr-2" onClick={openNew} />
-            <Button label="Excluir" icon="pi pi-trash" severity="danger" onClick={confirmDeleteSelected} disabled={!selectedProcessos.length} />
+            {isAdmin && <Button label="Novo" icon="pi pi-plus" severity="success" className="mr-2" onClick={openNew} />}
+            {isAdmin && <Button label="Excluir" icon="pi pi-trash" severity="danger" onClick={confirmDeleteSelected} disabled={!selectedProcessos.length} />}
         </>
     );
 
@@ -406,21 +447,21 @@ const ProcessosView = () => {
     const dialogFooter = (
         <>
             <Button label="Cancelar" icon="pi pi-times" text onClick={hideDialog} />
-            <Button label="Salvar" icon="pi pi-check" onClick={persistProcesso} />
+            <Button label="Salvar" icon="pi pi-check" onClick={persistProcesso} disabled={!isAdmin && !editingProcesso} />
         </>
     );
 
     const deleteFooter = (
         <>
             <Button label="Cancelar" icon="pi pi-times" text onClick={hideDeleteDialog} />
-            <Button label="Excluir" icon="pi pi-check" severity="danger" onClick={removeProcesso} />
+            <Button label="Excluir" icon="pi pi-check" severity="danger" onClick={removeProcesso} disabled={!isAdmin} />
         </>
     );
 
     const deleteManyFooter = (
         <>
             <Button label="Cancelar" icon="pi pi-times" text onClick={hideDeleteManyDialog} />
-            <Button label="Excluir" icon="pi pi-check" severity="danger" onClick={removeSelectedProcessos} />
+            <Button label="Excluir" icon="pi pi-check" severity="danger" onClick={removeSelectedProcessos} disabled={!isAdmin} />
         </>
     );
 
@@ -507,7 +548,7 @@ const ProcessosView = () => {
         return (
             <div className="flex gap-2">
                 <Button icon="pi pi-pencil" rounded outlined severity="success" onClick={() => editProcesso(rowData)} />
-                <Button icon="pi pi-trash" rounded outlined severity="danger" onClick={() => confirmDeleteProcesso(rowData)} />
+                {isAdmin && <Button icon="pi pi-trash" rounded outlined severity="danger" onClick={() => confirmDeleteProcesso(rowData)} />}
             </div>
         );
     }
