@@ -2,7 +2,15 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+First, configure the environment variables by copying the example file and adjusting values if necessary:
+
+```bash
+cp .env.local.example .env.local
+```
+
+`NEXT_PUBLIC_API_BASE_URL` defines the backend base URL (defaults to `https://localhost:7227/`).
+
+Then run the development server:
 
 ```bash
 npm run dev
@@ -15,6 +23,11 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Principais rotas
+
+- `/login`: tela pública para autenticação.
+- `/processos`: listagem e CRUD utilizando PrimeReact DataTable.
 
 ## Learn More
 

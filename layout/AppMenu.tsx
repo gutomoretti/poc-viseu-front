@@ -16,6 +16,13 @@ const AppMenu = () => {
             items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
         },
         {
+            label: 'Aplicação',
+            items: [
+                { label: 'Processos', icon: 'pi pi-fw pi-briefcase', to: '/processos' },
+                { label: 'Login', icon: 'pi pi-fw pi-sign-in', to: '/login' }
+            ]
+        },
+        {
             label: 'UI Components',
             items: [
                 { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
@@ -67,7 +74,7 @@ const AppMenu = () => {
                         {
                             label: 'Login',
                             icon: 'pi pi-fw pi-sign-in',
-                            to: '/auth/login'
+                            to: '/login'
                         },
                         {
                             label: 'Error',

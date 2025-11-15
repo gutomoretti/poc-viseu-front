@@ -1,7 +1,7 @@
 import LoginView from '@/views/auth/LoginView';
 
-const AuthLoginPage = () => {
+const LoginPage = () => {
     return <LoginView />;
 };
 
-export default AuthLoginPage;
+export default LoginPage;
