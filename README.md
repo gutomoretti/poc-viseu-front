@@ -27,7 +27,23 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ### Principais rotas
 
 - `/login`: tela pública para autenticação.
-- `/processos`: listagem e CRUD utilizando PrimeReact DataTable.
+- `/processos`: listagem e CRUD utilizando PrimeReact DataTable (rota protegida).
+
+### Autenticação e token
+
+- Autentique-se enviando `POST https://localhost:7227/api/Auth/authenticate` (mesmo payload do backend).
+- Exemplo de payload:
+
+```json
+{
+    "username": "admin",
+    "password": "123456",
+    "conId": 0
+}
+```
+
+- O token JWT retornado é armazenado com segurança (cookie HTTP Only + localStorage via `/api/auth/session`) e utilizado automaticamente nas chamadas protegidas (ex.: processos).
+- A rota `/processos` é protegida via `middleware.ts`, redirecionando usuários não autenticados para `/login`.
 
 ## Learn More
 

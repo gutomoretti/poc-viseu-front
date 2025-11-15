@@ -14,6 +14,8 @@ import { Tag } from 'primereact/tag';
 import { classNames } from 'primereact/utils';
 import { Processo, ProcessoPayload, ProcessoPrioridade, ProcessoService, ProcessoStatus } from '@/services/processo-service';
 import { SelectItem } from 'primereact/selectitem';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 const fallbackProcessos: Processo[] = [
     {
@@ -69,15 +71,29 @@ const ProcessosView = () => {
     const [selectedProcessos, setSelectedProcessos] = useState<Processo[]>([]);
     const [submitted, setSubmitted] = useState(false);
     const toast = useRef<Toast>(null);
+    const { user, logout, isAuthenticated, initializing } = useAuth();
+    const router = useRouter();
 
     const statusOptions = useMemo<SelectItem<ProcessoStatus>[]>(() => ['Recebido', 'Em andamento', 'Concluído'].map((status) => ({ label: status, value: status })), []);
     const prioridadeOptions = useMemo<SelectItem<ProcessoPrioridade>[]>(() => ['Baixa', 'Média', 'Alta'].map((prioridade) => ({ label: prioridade, value: prioridade })), []);
 
     useEffect(() => {
-        fetchProcessos();
-    }, []);
+        if (!initializing && isAuthenticated) {
+            fetchProcessos();
+        }
+    }, [initializing, isAuthenticated]);
+
+    useEffect(() => {
+        if (!initializing && !isAuthenticated) {
+            router.replace('/login');
+        }
+    }, [initializing, isAuthenticated, router]);
 
     const fetchProcessos = async () => {
+        if (!isAuthenticated) {
+            return;
+        }
+
         setLoading(true);
         const { data, error } = await ProcessoService.list();
         if (error && data === null) {
@@ -203,6 +219,11 @@ const ProcessosView = () => {
         return null;
     };
 
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
+
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center gap-3">
             <h5 className="m-0">Gerenciamento de Processos</h5>
@@ -263,10 +284,28 @@ const ProcessosView = () => {
     );
 
     const rightToolbarTemplate = () => (
-        <React.Fragment>
+        <div className="flex align-items-center gap-2">
+            {user && (
+                <span className="text-sm text-500">
+                    Logado como <strong>{user.username}</strong>
+                </span>
+            )}
             <Button label="Atualizar" icon="pi pi-refresh" outlined onClick={fetchProcessos} />
-        </React.Fragment>
+            <Button label="Sair" icon="pi pi-sign-out" severity="secondary" onClick={handleLogout} />
+        </div>
     );
+
+    if (initializing) {
+        return (
+            <div className="flex align-items-center justify-content-center min-h-full">
+                <i className="pi pi-spin pi-spinner text-4xl"></i>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return null;
+    }
 
     return (
         <div className="grid">
